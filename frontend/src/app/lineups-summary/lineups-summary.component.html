@@ -1,0 +1,65 @@
+<main class="dashboard">
+  <header class="hero">
+    <div class="eyebrow"><span class="eyebrow-mark"></span> BASKETBALL INTELLIGENCE <span class="eyebrow-divider">/</span> LINEUP EXPLORER</div>
+    <h1>Every lineup tells<br /><em>a story.</em></h1>
+    <p>Explore the numbers behind every possession. Compare offensive production, defensive impact, and the combinations that make a difference.</p>
+    <div class="hero-rule"></div>
+    <span class="hero-meta">THE COURT IS YOURS TO EXPLORE <span aria-hidden="true">↗</span></span>
+  </header>
+
+  <div class="section-heading"><div><span class="section-kicker">01 / CHOOSE YOUR LEAGUE</span><h2>Step onto the court</h2></div><span class="section-aside">TWO LEAGUES. ONE GAME.</span></div>
+  <section class="league-choices" aria-label="Choose a basketball league">
+    <a class="league-card nba" routerLink="/basketball-play" [queryParams]="{ league: 'NBA' }"><span class="card-top"><span class="card-label">MEN'S LEAGUE</span><span class="card-arrow" aria-hidden="true">↗</span></span><strong>NBA</strong><span class="card-bottom">30 teams <span aria-hidden="true">·</span> Explore the play demo</span></a>
+    <a class="league-card wnba" routerLink="/basketball-play" [queryParams]="{ league: 'WNBA' }"><span class="card-top"><span class="card-label">WOMEN'S LEAGUE</span><span class="card-arrow" aria-hidden="true">↗</span></span><strong>WNBA</strong><span class="card-bottom">15 teams <span aria-hidden="true">·</span> Explore the play demo</span></a>
+  </section>
+  <p class="league-data-note">Lineup ratings below use the provided assessment dataset. The NBA and WNBA play demos use team listings and simulated plays; their scores are not official game results.</p>
+
+  <div class="section-heading data-heading"><div><span class="section-kicker">02 / THE DATA</span><h2>Lineup explorer</h2></div><span class="section-aside">POSSESSION ANALYSIS</span></div>
+  <section class="controls" aria-label="Lineup filters">
+    <label>Lineup size
+      <select [(ngModel)]="lineupSize" (ngModelChange)="load()">
+        <option [ngValue]="5">5 players</option><option [ngValue]="4">4 players</option>
+        <option [ngValue]="3">3 players</option><option [ngValue]="2">2 players</option><option [ngValue]="1">1 player</option>
+      </select>
+    </label>
+    <label>Team
+      <select [(ngModel)]="team"><option value="">All teams</option><option *ngFor="let name of teams" [value]="name">{{ name }}</option></select>
+    </label>
+    <label>Find a player or team
+      <input [(ngModel)]="search" placeholder="Search names" type="search" />
+    </label>
+    <label>Rank by
+      <select [(ngModel)]="sortBy">
+        <option value="net_rating">Net rating</option><option value="total_possessions">Possessions</option>
+        <option value="offensive_rebound_rate">Offensive rebounding</option>
+        <option value="defensive_rebound_rate">Defensive rebounding</option>
+      </select>
+    </label>
+  </section>
+
+  <p *ngIf="loading" role="status">Loading lineup data…</p>
+  <p *ngIf="error" role="alert" class="error">{{ error }}</p>
+  <ng-container *ngIf="!loading && !error">
+    <section class="highlights" *ngIf="visible.length">
+      <article><span>LINEUPS FOUND</span><strong>{{ visible.length | number }}</strong><small>Matching the current filters</small></article>
+      <article><span>TOP NET RATING</span><strong>{{ leader?.net_rating ?? '—' | number:'1.1-1' }}</strong><small>{{ leader?.team_name || 'No two-sided data' }}</small></article>
+      <article><span>REBOUNDING LEADER</span><strong>{{ reboundLeader?.team_name }}</strong><small>Combined offensive + defensive rebound rate</small></article>
+    </section>
+    <div class="table-wrap" *ngIf="visible.length; else empty">
+      <table>
+        <thead><tr><th scope="col">Team / players</th><th scope="col">Poss.</th><th scope="col">Off. rating</th><th scope="col">Def. rating</th><th scope="col">Net rating</th><th scope="col">Off. reb.</th><th scope="col">Def. reb.</th></tr></thead>
+        <tbody><tr *ngFor="let row of visible">
+          <td><strong>{{ row.team_name }}</strong><div class="players"><span *ngFor="let player of row.players; let last = last">{{ player.name }}{{ last ? '' : ' · ' }}</span></div></td>
+          <td>{{ row.total_possessions | number }}</td>
+          <td>{{ row.offensive_possessions ? (row.offensive_rating | number:'1.1-1') : '—' }}</td>
+          <td>{{ row.defensive_possessions ? (row.defensive_rating | number:'1.1-1') : '—' }}</td>
+          <td><span class="rating" [class.positive]="row.net_rating !== null && row.net_rating > 0" [class.negative]="row.net_rating !== null && row.net_rating < 0">{{ row.net_rating === null ? '—' : (row.net_rating > 0 ? '+' : '') + (row.net_rating | number:'1.1-1') }}</span></td>
+          <td>{{ row.offensive_rebound_rate | percent:'1.0-1' }}</td>
+          <td>{{ row.defensive_rebound_rate | percent:'1.0-1' }}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <ng-template #empty><p class="empty">No lineups match these filters. Try another player or team.</p></ng-template>
+    <p class="footnote">Net rating = offensive rating − defensive rating. A dash means that lineup has no possessions on one side of the ball. Rebound rates use recorded rebound opportunities.</p>
+  </ng-container>
+</main>

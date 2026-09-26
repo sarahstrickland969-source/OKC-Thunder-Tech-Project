@@ -1,0 +1,30 @@
+<main class="play-shell">
+  <header><span class="kicker">BASKETBALL PLAY / ILLUSTRATED DEMO</span><h1>Make the next play.</h1><p>Choose an NBA or WNBA team and a player slot. Choose a move, watch their reactions, and build your score.</p></header>
+  <p *ngIf="loading" role="status">Loading teams and players…</p>
+  <p *ngIf="error" role="alert">{{ error }}</p>
+  <ng-container *ngIf="teams.length >= 2">
+  <section class="toolbar"><label>LEAGUE <select [(ngModel)]="selectedLeague" (ngModelChange)="changeLeague()"><option value="NBA">NBA</option><option value="WNBA">WNBA</option></select></label><label>YOUR TEAM <select [(ngModel)]="selectedTeam" (ngModelChange)="reset()"><option *ngFor="let option of availableTeams" [value]="option.id">{{ option.name }}</option></select></label><label>OPPONENT <select [(ngModel)]="opponentTeam" (ngModelChange)="reset()"><option *ngFor="let option of availableTeams" [value]="option.id" [disabled]="option.id === selectedTeam">{{ option.name }}</option></select></label><button type="button" class="reset" (click)="reset()">New game</button><span>Q{{ quarter }} / 4</span></section>
+  <section class="scoreboard" aria-label="Score"><div><span class="swatch" [style.background]="team.color"></span>{{ team.name }} <strong>{{ homeScore }}</strong></div><b>VS</b><div><strong>{{ awayScore }}</strong> {{ opponent.name }}<span class="swatch" [style.background]="opponent.color"></span></div></section>
+  <div class="court" role="group" aria-label="Illustrated basketball court">
+    <div class="midline"></div><div class="midcircle"></div><div class="hoop left">◉</div><div class="hoop right">◉</div>
+    <button type="button" class="athlete ours" *ngFor="let player of players; let i = index" [class.holder]="ballHolder === i" [style.left.%]="player.x" [style.top.%]="player.y" [style.--jersey]="team.color" (click)="selectPlayer(i)" [attr.aria-label]="'Select ' + player.name">
+      <span class="bubble" *ngIf="player.line">{{ player.line }}</span><span class="portrait" [style.--skin]="player.skinTone" [style.--hair]="player.hairColor" [style.--eyes]="player.eyeColor.toLowerCase()"><span class="hair" [ngClass]="player.hairType.toLowerCase()"></span><span class="eyes">● ●</span><span class="mouth">⌣</span></span><span class="body"><small>{{ abbreviation }}</small>{{ player.number }}</span><span class="shorts"></span><span class="name">{{ player.name }}</span><span class="mood">{{ player.expression }}</span><span class="ball" *ngIf="ballHolder === i">🏀</span>
+    </button>
+    <div class="athlete opponent" *ngFor="let player of opponents" [style.left.%]="player.x" [style.top.%]="player.y" [style.--jersey]="opponent.color"><span class="bubble" *ngIf="player.line">{{ player.line }}</span><span class="portrait" [style.--skin]="player.skinTone" [style.--hair]="player.hairColor" [style.--eyes]="player.eyeColor.toLowerCase()"><span class="hair" [ngClass]="player.hairType.toLowerCase()"></span><span class="eyes">● ●</span><span class="mouth">⌣</span></span><span class="body"><small>{{ opponentAbbreviation }}</small>{{ player.number }}</span><span class="shorts"></span><span class="name">{{ player.name }}</span><span class="mood">{{ player.expression }}</span></div>
+  </div>
+  <section class="customize" *ngIf="selectedPlayer as player" aria-label="Customize selected player">
+    <div><h2>Customize {{ player.name }} <span>#{{ player.number }}</span></h2><p>Select a player on the court to edit their look. Appearance edits affect this game only.</p></div>
+    <div class="custom-grid">
+      <label>Skin tone<select [(ngModel)]="player.skinTone"><option *ngFor="let option of skinTones" [value]="option.value">{{ option.label }}</option></select></label>
+      <label>Eye color<select [(ngModel)]="player.eyeColor"><option *ngFor="let option of eyeColors" [value]="option">{{ option }}</option></select></label>
+      <label>Hair type<select [(ngModel)]="player.hairType"><option *ngFor="let option of hairTypes" [value]="option">{{ option }}</option></select></label>
+      <label>Hair color<select [(ngModel)]="player.hairColor"><option *ngFor="let option of hairColors" [value]="option.value">{{ option.label }}</option></select></label>
+      <label>Race or identity (optional)<input [(ngModel)]="player.identity" maxlength="40" placeholder="Enter only if you choose" /></label>
+    </div>
+    <p class="identity-note">Race and identity are chosen separately; they are not determined by appearance.</p>
+  </section>
+  <section class="actions"><p role="status" aria-live="polite">{{ message }}</p><div class="buttons"><button type="button" (click)="play('pass')" [disabled]="finished">↗ Pass</button><button type="button" (click)="play('dunk')" [disabled]="finished">🏀 Dunk</button><button type="button" (click)="play('three')" [disabled]="finished">◉ Shoot three</button><button type="button" (click)="play('foul')" [disabled]="finished">⚑ Draw foul</button></div></section>
+  <section class="log"><h2>Play by play</h2><p *ngIf="!history.length">The game starts with your first shot.</p><ol><li *ngFor="let entry of history.slice(0, 12)">{{ entry }}</li></ol></section>
+  <p class="note">All 30 NBA and 15 WNBA team names are included. Player 1–5 are placeholders, not current rosters or starting lineups. Jersey numbers, team colors, appearance, actions and scores are simulated. This fan demo is unaffiliated with the leagues.</p>
+  </ng-container>
+</main>

@@ -1,0 +1,37 @@
+AI model queried: GPT-6 (Codex; exact variant for earlier sessions was not exposed).
+Ordered user prompts for AI assistance on this project (text prompts; screenshots and files noted where relevant):
+
+1. "Help with this project" — project instructions attached.
+2. "here you go" — repository screenshot attached.
+3. "ok" — Procfile.txt and gitignore.txt attached.
+4. [No text prompt] — project ZIP uploaded for implementation.
+5. "I want all 32 basket ball team in the NBA and I want the user to have the choice of playing the women basketball teams with all players and the start up line. including the stats records, , how point they made and the score. Including the colors of the teams and coaches"
+6. "both"
+7. "Yes, Have them dunk, shoot 3 pointer, foul, pass and make it llook like the players are conversing or emotional and do i need to name the player s"
+8. "Yes I would like that"
+9. "Can you add different features, eye color , hair type, races and and add defintion to there jerseys"
+10. "Can you connect the. Play demo to the team and player data" — project ZIP attached.
+11. "Can you put NBA and WNBA" — project ZIP attached.
+12. "For the instructions not to have anybody professional there"
+13. "Can you make it look more professional" — dashboard screenshot attached.
+14. "can you bring up again the copy and paste" — dashboard screenshot attached.
+15. "can we get started on the demo now"
+16. "remind of me of the instructions"
+17. "Ok. Let’s do that"
+18. "yes can we continue"
+19. "this is the whole page" — screen recording attached.
+20. "what do i need to do"
+21. "when you say chrome window are you talking about the page where the project is on"
+22. "what green button" — screenshot attached.
+23. "n, what is the demo play"
+24. "ok can you show it noe"
+25. "it not going anywhere" — screenshot attached.
+26. "ok can you make a chech list of the assignment and cross them out as we have already done it"
+27. "ok can complete written responses"
+28. "can we add it the project"
+29. "how do i mac project"
+30. "yes it does" — responses.md preview attached.
+31. "ok continue"
+32. "yes it is" — ai_prompts.txt preview attached.
+
+No AI outputs are included.
