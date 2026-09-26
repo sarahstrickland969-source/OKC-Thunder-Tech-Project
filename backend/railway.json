@@ -4,6 +4,6 @@
     "buildCommand": "pip install -r requirements.txt"
   },
   "deploy": {
-    "startCommand": "python scripts/bootstrap.py && gunicorn app.wsgi --bind [::]:${PORT}"
+    "startCommand": "python scripts/bootstrap.py && gunicorn app.wsgi:application --bind 0.0.0.0:$PORT"
   }
 }
