@@ -4,4 +4,4 @@ Applicant Name: Sarah Strickland
 
 Applicant Email Address: sarahstrickland969@gmail.com
 
-Deployed Project URL: Not yet deployed; see demo/lineup-explorer-demo.mp4 for the local application recording.
+Deployed Project URL: https://sarah-lineup-web.onrender.com/\n\nDemo recording: demo/lineup-explorer-demo.mp4
