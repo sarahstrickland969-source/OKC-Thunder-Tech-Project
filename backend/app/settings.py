@@ -103,7 +103,10 @@ DATABASES = {
     },
 }
 
-db_from_env = dj_database_url.config(conn_max_age=600)
+database_url = os.environ.get('DATABASE_URL')
+if os.environ.get('RAILWAY_ENVIRONMENT') and not database_url:
+    raise RuntimeError('DATABASE_URL is missing from the Railway web service environment')
+db_from_env = dj_database_url.parse(database_url, conn_max_age=600) if database_url else None
 if db_from_env:
     # Preserve app schema search_path when Railway/DATABASE_URL overrides defaults.
     options = DATABASES['default'].get('OPTIONS', {}).copy()
