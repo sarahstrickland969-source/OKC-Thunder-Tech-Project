@@ -16,14 +16,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'x31d0_@i19bz)q*_nibl8#p224$hu1yhk$or$ew=7j#v5h3%4f'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'local-development-only-key')
+if os.environ.get('RAILWAY_ENVIRONMENT') and 'DJANGO_SECRET_KEY' not in os.environ:
+    raise RuntimeError('Set DJANGO_SECRET_KEY in Railway before deploying')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false' if os.environ.get('RAILWAY_ENVIRONMENT') else 'true').lower() == 'true'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [host for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if host]
+if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
+    ALLOWED_HOSTS.append(os.environ['RAILWAY_PUBLIC_DOMAIN'])
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = [origin for origin in os.environ.get('FRONTEND_ORIGIN', '').split(',') if origin]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
