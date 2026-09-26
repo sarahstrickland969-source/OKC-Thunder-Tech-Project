@@ -1,5 +1,11 @@
 """Initialize the Railway database once before serving API requests."""
 import os
+import sys
+from pathlib import Path
+
+# Running this file directly puts scripts/ on sys.path, not the backend root.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
