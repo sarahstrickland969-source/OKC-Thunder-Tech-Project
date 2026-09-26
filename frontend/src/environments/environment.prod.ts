@@ -1,5 +1,4 @@
 export const environment = {
   production: true,
-  // Replace with Railway backend public domain (including https://, no trailing slash).
-  BACKEND_PUBLIC_DOMAIN: '',
+  BACKEND_PUBLIC_DOMAIN: 'https://web-production-96d872.up.railway.app',
 };
