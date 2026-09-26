@@ -17,18 +17,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'local-development-only-key')
-if os.environ.get('RAILWAY_ENVIRONMENT') and 'DJANGO_SECRET_KEY' not in os.environ:
-    raise RuntimeError('Set DJANGO_SECRET_KEY in Railway before deploying')
+if (os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RENDER')) and 'DJANGO_SECRET_KEY' not in os.environ:
+    raise RuntimeError('Set DJANGO_SECRET_KEY before deploying')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'false' if os.environ.get('RAILWAY_ENVIRONMENT') else 'true').lower() == 'true'
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false' if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RENDER') else 'true').lower() == 'true'
 
 ALLOWED_HOSTS = [host for host in os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',') if host]
 if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ['RAILWAY_PUBLIC_DOMAIN'])
+if os.environ.get('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(os.environ['RENDER_EXTERNAL_HOSTNAME'])
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [origin for origin in os.environ.get('FRONTEND_ORIGIN', '').split(',') if origin]
+if os.environ.get('FRONTEND_HOST'):
+    CORS_ALLOWED_ORIGINS.append('https://' + os.environ['FRONTEND_HOST'])
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -104,8 +108,8 @@ DATABASES = {
 }
 
 database_url = os.environ.get('DATABASE_URL')
-if os.environ.get('RAILWAY_ENVIRONMENT') and not database_url:
-    raise RuntimeError('DATABASE_URL is missing from the Railway web service environment')
+if (os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RENDER')) and not database_url:
+    raise RuntimeError('DATABASE_URL is missing from the web service environment')
 db_from_env = dj_database_url.parse(database_url, conn_max_age=600) if database_url else None
 if db_from_env:
     # Preserve app schema search_path when Railway/DATABASE_URL overrides defaults.
