@@ -1,243 +1,83 @@
-# OKC Technical Project Deliverable
+# Basketball Lineup Explorer
 
-Your work must be your own and original. You may use AI tools to help aid your work if you include a single text file containing an ordered list of any AI prompts, along with the specific model queried (e.g. GPT-5.6 Luna) in the `prompts` directory. Do not include the AI's output.
+A basketball analytics application by **Sarah Strickland**, built for the OKC Thunder technical project. The deployed dashboard turns the supplied possession dataset into searchable lineup comparisons for coaches and decision makers. The assessment data includes fictional teams and players; its ratings are not NBA or WNBA results.
 
-**Your final submission must include a working backend and frontend, as well as written responses to the questions in part 3. We also require that you deploy your final project and include a screen recording in order for your submission to be considered complete. If you are unable to deploy your application, ensure that your screen recording captures all of the available views and functionality in your frontend.**
+**[Open the deployed app](https://sarah-lineup-web.onrender.com/)** · **[Watch the screen recording](demo/lineup-explorer-demo.mp4)** · **[Read the analysis](written_responses/responses.md)** · **[Submission details](SUBMISSION.md)**
 
-### Internship Program Disclosures
+## What the application does
 
-* You must be eligible to work in the United States to be able to qualify for this internship.
+- Aggregates each possession for the players on offense and defense, including combinations of one through five players.
+- Shows offensive and defensive points, possession counts, ratings per 100 possessions, net rating, shooting percentages, and offensive and defensive rebounding rates from recorded opportunities.
+- Lets visitors change lineup size, filter by team, search for a player or team, and rank by net rating, possessions, or rebounding. Summary cards highlight matching lineups, the top net rating, and a rebounding leader.
+- Handles loading, API errors, empty results, and lineups without possessions on both sides of the ball. A missing net rating appears as a dash.
+- Includes written answers to the three assessment questions about the strongest lineup, strongest player, and a lineup suited to counter a larger rebounding team.
 
-* The pay for this internship is the greater of your local minimum wage and $13/hour.
+A separate NBA/WNBA play simulation component is present in the source. It models passes, dunks, three-point attempts, fouls, scores, and player reactions, but it is **not currently reachable in the deployed app**: the Angular route for `/basketball-play` and the backend `/api/v1/play/teams` endpoint it calls are absent. The league cards on the dashboard therefore do not open a working demo. See [Remaining work](#remaining-work).
 
-* This application is for the purposes of an internship taking place in the Spring, Summer, or Fall of 2027.
+## Stack and architecture
 
-### 1. Backend Engineering
+| Layer | Implementation |
+| --- | --- |
+| Frontend | Angular 21, TypeScript, HTML, SCSS; `frontend/src/app/lineups-summary/` renders the dashboard and `frontend/src/app/_services/` calls the API. |
+| API | Python 3.12, Django 5.2, Django REST Framework; `backend/app/views/lineups.py` serves `GET /api/v1/lineups?lineup_size=5`. |
+| Analysis | `backend/app/helpers/lineups.py` groups offensive and defensive possession stats by team and player combination and computes ratings and rebound rates. |
+| Data | PostgreSQL; Django migrations and `backend/scripts/ingest_raw_data.py` load the supplied JSON data. |
+| Deployment | `render.yaml` defines a Render PostgreSQL database, Django web service, and Angular static site. The backend startup script migrates and imports data if the team table is empty. The frontend build injects the Render API host. |
 
-* The skeleton API View `LineupsLeagueSummary` can be found in `backend/app/views/lineups.py`. This API View calls the `get_lineup_league_summary_stats` helper function in `backend/app/helpers/lineups.py` to aggregate lineup stats. `LineupsLeagueSummary` accepts a `lineup_size` query param `n` at `/api/v1/lineups` to aggregate n-man lineups across all possessions.
+The browser requests lineup data from the Django API, which queries PostgreSQL and returns aggregated rows. Team and player search, sorting, and display highlights run in the Angular client. The API accepts `lineup_size` from 1 to 5 (default 5); the frontend offers those five sizes. The API response is an array of lineup records.
 
-You are to implement the `get_lineup_league_summary_stats` function in `backend/app/helpers/lineups.py`. The goal is to construct a response that includes:
-- the players within the lineup (up to 5)
-- sum of possession-level stats on both offense & defense
+## Run locally
 
-The structure of the response should follow the sample in `backend/app/helpers/sample_summary_data/sample_summary_data.json`.
+Prerequisites: Python 3.12, Node.js 22 with npm 10 or later, and PostgreSQL. From a clone of this repository:
 
-You are required to add additional metrics to the response to highlight lineup performance and to add features that would address specific use cases when building out the backend. Do not feel limited to solely the `lineup_size` query param.
+1. Create the local database and user (choose a password consistent with `backend/app/settings.py`; the checked-in local defaults use `thunder`):
 
-* Feel free to import additional modules/libraries, but ensure that the `backend/requirements.txt` is updated accordingly. Visiting http://localhost:4200/lineups-summary-api allows you to inspect the response returned by the endpoint while you work on the helper implementation.
+   ```bash
+   createuser okcapplicant --createdb
+   createdb okc
+   psql okc
+   ```
 
-### 2. Frontend Engineering
+   In `psql`:
 
-* The `lineups-summary` component, which is viewable at http://localhost:4200/lineups-summary, makes a call to an API endpoint at `/api/v1/lineups` that returns metrics aggregated by lineups (default size is 5-man). Each row corresponds to a given lineup and their associated metrics across all possessions.
+   ```sql
+   CREATE SCHEMA app;
+   ALTER USER okcapplicant WITH PASSWORD 'thunder';
+   GRANT ALL ON SCHEMA app TO okcapplicant;
+   ```
 
-* Within the `lineups-summary` component found in `frontend/src/app/lineups-summary/`, create a user interface for NBA coaches and executives that displays the data returned from the API. You should incorporate any additional features you implemented into the backend on the user interface here. We are looking for a thoughtful, creative, and useful interface. 
+2. Install backend dependencies, migrate, and load the supplied dataset:
 
-* Feel free to import additional modules of your choice, and design the interface however you wish. Just make sure that the `package.json` and `package-lock.json` are updated accordingly.
+   ```bash
+   python3.12 -m venv .venv
+   source .venv/bin/activate
+   pip install -r backend/requirements.txt
+   cd backend
+   python manage.py migrate
+   PYTHONPATH=. python scripts/ingest_raw_data.py
+   python manage.py runserver
+   ```
 
-* Upon completion of the Frontend Engineering deliverable, please attempt to deploy your project following the [deployment instructions](#deploying-through-railway) below and upload to this repo screenshots or screen captures that demonstrate your UI.
+3. In another terminal, start the frontend:
 
-### 3. Data Analysis
+   ```bash
+   cd frontend
+   npm ci
+   npm start
+   ```
 
-After completing parts 1 and 2, answer the following questions and provide clear explanations of your thought process. We understand that the data provided is limited, and ask that you ignore sample size concerns in your analysis. Include your responses in `written_responses/responses.md`.
+Open [http://localhost:4200/lineups-summary](http://localhost:4200/lineups-summary). The API runs at [http://localhost:8000/api/v1/lineups?lineup_size=5](http://localhost:8000/api/v1/lineups?lineup_size=5), and the frontend's raw-response view is at [http://localhost:4200/lineups-summary-api](http://localhost:4200/lineups-summary-api). Keep PostgreSQL and both servers running. For subsequent local starts, the data import only needs repeating if you reset the database.
 
+## Deployment and submission
 
-1. Which 5-man lineup in the league has the most positive on-court impact?
+The project is configured for Render through [`render.yaml`](render.yaml), with separate database, API, and static frontend services. The current public frontend URL is recorded in [`SUBMISSION.md`](SUBMISSION.md). The original assignment included Railway deployment steps; this submission uses Render. If redeploying on Render, connect the repository as a Blueprint and verify the generated service hostnames, database connection, and frontend API requests. The API has no separate public link recorded in `SUBMISSION.md`.
 
-2. Which player has the most positive on-court impact?
+The original assessment requires a working backend and frontend, written responses to all three analysis questions, an attempted deployment, and a screen recording. Keep the deployed frontend URL, applicant name, and email in `SUBMISSION.md`; keep the [recording](demo/lineup-explorer-demo.mp4) and [written responses](written_responses/responses.md) in the repository. If the deployment cannot be opened, the recording must show all available frontend views and functionality. The assessment also requires an ordered list of AI prompts and model names in one text file under `prompts/`, without AI outputs; see [`prompts/ai_prompts.txt`](prompts/ai_prompts.txt). Project work must be original.
 
-3. A new team is entering the league, and they are known for deploying lineups with multiple centers and large forwards. These lineups are effective at both offensive and defensive rebounding due to their size and emphasis on crashing the glass. Which 5-man lineup is best suited to countering this strategy, and why?
+## Remaining work
 
+- Wire the play simulation into Angular routing and implement or remove its missing `/api/v1/play/teams` API integration before presenting the NBA/WNBA league cards as a functioning feature.
+- Verify the deployed URL and recording from a fresh browser session before submitting; this README update is based on repository files and commits, not a live deployment check.
+- Review the AI prompt log for completeness and exact model names where available, as the assessment explicitly requires them.
 
-# Application Setup
-In order to complete the Backend Engineering or Frontend Engineering deliverables, you will need to do all of the following setup items. Please follow the instructions below, from top to bottom sequentially, to ensure that you are set up to run the app. The app is run on an Angular frontend, Django backend, and a PostgreSQL database.
-
-## Set up database
-1. Download and install PostgreSQL from https://www.postgresql.org/download/
-2. Ensure PostgreSQL is running, and in a terminal run
-    ```
-    createuser okcapplicant --createdb;
-    createdb okc;
-    ```
-3. connect to the okc database:
-    ```
-    psql okc
-    ```
-4. Grant necessary permissions
-    ```
-    -- should be in the psql okc terminal with okc=#
-    create schema app;
-    alter user okcapplicant with password 'thunder';
-    grant all on schema app to okcapplicant;
-    ```
-
-
-## Backend
-
-### 1. Install pyenv and virtualenv
-
-Read about pyenv here https://github.com/pyenv/pyenv as well as info on how to install it.
-You may also need to install virtualenv in order to complete step 2.
-
-### 2. Installing Prerequisites
-The steps below attempt to install Python version 3.12.9 within your pyenv environment. If you computer is unable to install this particular version, you can feel free to use a version that works for you, but note that you may also be required to update existing parts of the codebase to make it compatible with your installed version.
-```
-cd root/of/project
-pyenv install 3.12.9
-pyenv virtualenv 3.12.9 okc
-pyenv local okc
-eval "$(pyenv init -)"
-pyenv activate okc
-pip install -r backend/requirements.txt
-```
-
-### 3. Ingesting the Data
-You can setup database tables designed for the data by running the initial migration:
-```
-cd /path/to/project/backend
-python manage.py migrate
-```
-
-Then you can ingest the data using the provided script:
-```
-cd /path/to/project/backend
-PYTHONPATH=. python scripts/ingest_raw_data.py
-```
-
-### 4. Starting the Backend
-Start the backend by running the following commands
-```
-cd /path/to/project/backend
-python manage.py runserver
-```
-
-You may ignore the warnings regarding the database not being set such as: `WARNING:root:No DATABASE_URL environment variable set, and so no databases setup`
-
-The backend should run on http://localhost:8000/.
-
-
-## Frontend
-
-### 1. Installing Prerequisites
-Install Node.js (22.x)
-```
-cd /path/to/project/frontend
-npm install
-```
-
-### 2. Starting the Frontend
-Start the frontend by running the following commands
-```
-cd /path/to/project/frontend
-npm start
-```
-The frontend should run on http://localhost:4200/. Visit this address to see the app in your browser.
-
-# Deploying through Railway
-
-After you finish the project, we ask that you attempt to deploy your work to make it easily viewable in a browser. Below are instructions on deploying the app through Railway. It should not be necessary to give any credit card information to Railway as the deployment instructions are intended to solely utilize free services on the platform.
-
-### 1. Install the Railway CLI
-```
-npm i -g @railway/cli
-```
-### 2. Login to the Railway CLI and create an account through your Github account in your browser
-```
-railway login
-```
-### 3. Initialize a Railway Project
-
-Run the command below to create a project (you can use &lt;githubusername&gt;-thunder-2026 for your project name when prompted)
-```
-railway init
-```
-After the project is created, you can visit the link generated to view the Project's Architecture and modify the services we will generate in the following steps.
-
-### 4. Add a Postgres instance to your project
-Run the command below to add a Postgres instance to your Railway Project's architecture:
-```
-railway add --database postgres --service database
-```
-
-You should now see a "database" block in the Project Architecture interface. If not, you should be able to see it after refreshing the page. **Wait for the Postgres instance to indicate that it has deployed successfully before moving onto the next step. If you get a generic error message when attempting to deploy the database, this may be an intermittent failure that can be resolved by trying again after some time.**
-
-### 5. Add a backend service and connect it to your app's Postgres instance
-Run the command below as a single line:
-```
-railway add \
-  --service backend \
-  --variables 'DATABASE_URL=${{Postgres.DATABASE_URL}}' \
-  --variables 'PGDATABASE=${{Postgres.PGDATABASE}}' \
-  --variables 'PGHOST=${{Postgres.PGHOST}}' \
-  --variables 'PGPASSWORD=${{Postgres.PGPASSWORD}}' \
-  --variables 'PGPORT=${{Postgres.PGPORT}}' \
-  --variables 'PGUSER=${{Postgres.PGUSER}}' \
-  --variables 'DJANGO_SETTINGS_MODULE=app.settings'
-```
-
-You should now see a "backend" block in the Project Architecture interface. If not, you should be able to see it after refreshing the page.
-
-### 6. Configure your backend service
-- Select the backend service by clicking on the "backend" block in the Railway Project Architecture interface
-- Connect your backend service to your project's Github repository by navigating to Settings and selecting "Connect Repo" in the Source section. From here, select your project's Github repo
-- In the same Source section, set the root directory to `backend`
-- In the Networking section select "Generate Domain" under Public Networking, and keep the port set as the default (8080)
-- Put the same domain generated by the backend in `/path/to/project/frontend/src/environments/environment.prod.ts` **(including the https:// and ignoring the final forward slash / after the domain)** to allow the frontend that you will deploy to get responses from your backend. Make sure you push this change to your main branch
-
-Ex: if the backend domain generated is `backend-thunder-technical.xyz.railway.app`, your `environment.prod.ts` should look like:
-```
-export const environment = {
-  production: true,
-  BACKEND_PUBLIC_DOMAIN: 'https://backend-thunder-technical.xyz.railway.app'
-};
-```
-
-Once you finish configuring your backend service, you can apply the changes by selecting "Deploy" at the top of the interface.
-
-If your backend service isn't able to successfully deploy, try deleting the service by navigating to the bottom of settings, selecting "Delete service", and deploying the destructive changes when prompted. Then try re-doing steps 5 and 6.
-
-### 7. Add a frontend service
-Run the command below to add a frontend service. Note: You won't need to add any variables for the frontend service, so you can press enter to skip that portion when prompted.
-```
-railway add --service frontend
-```
-
-You should now see a "frontend" block in the Project Architecture interface. If not, you should be able to see it after refreshing the page.
-
-### 8. Configure your frontend service
-
-- Connect your frontend service to your project's Github repository by clicking the "frontend" block in the Railway Project Architecture interface, navigating to Settings, and selecting "Connect Repo" in the Source section. From here, select your project's Github repo
-- In the same Source section, set the root directory to `frontend`
-- **Make sure the commit including the change to add your backend service's public domain to `environment.prod.ts` is pushed to your repo**
-- In the Networking section select "Generate Domain" under Public Networking, and keep the port set as the default (8080)
-
-Once you finish configuring your frontend service, you can apply the changes by selecting "Deploy" at the top of the interface.
-
-Once deployed, your frontend should be accessible from the domain you generated, and it should be able to access your backend service. **Note down the domain generated for the frontend service in `SUBMISSION.md` as this will be the URL that allows us to access your project.**
-
-### 9. Dump the contents of your local database to the Railway Postgres instance
-
-To export the state of your database, from the root directory of the project, run:
-```shell
-pg_dump -U okcapplicant okc > dbexport.pgsql
-```
-
-Then connect to your Postgres service:
-```
-cd /path/to/project
-railway connect Postgres
-```
-
-If prompted to generate SSH keys, follow the instructions to generate one through the CLI and run the command again. You may need to then register the SSH key with Railway after by hitting "Y" in the CLI.
-
-In your railway db psql shell run:
-```
--- should be in the psql railway terminal with railway=#
-\i dbexport.pgsql
-```
-
-# SUBMISSION.md
-Please fill out the SUBMISSION.md file to ensure we have your name and email attached to the project along with the frontend public domain URL to access your deployed project.
-
-# Questions?
-
-Email datasolutions@okcthunder.com
+For assessment questions, the original instructions list **datasolutions@okcthunder.com**.
